@@ -20,9 +20,6 @@ function PaintedZones({ zones, onRemove }) {
 
   return (
     <g>
-      {/* Subtle fog to make painted zones pop */}
-      <rect x="-5000" y="-3000" width="10000" height="6000" fill="rgba(5,11,20,0.28)" style={{ pointerEvents: 'none' }} />
-
       {zones.map(zone => {
         const radiusDeg = zone.radiusKm / 111
         try {
@@ -30,32 +27,32 @@ function PaintedZones({ zones, onRemove }) {
           const d = pathGen(circle)
           if (!d) return null
           const isHov = hovered === zone.id
+          const centroid = pathGen.centroid(circle)
+          if (!centroid || isNaN(centroid[0])) return null
           return (
             <g key={zone.id}>
               <path
                 d={d}
-                fill={isHov ? 'rgba(251,191,36,0.3)' : 'rgba(245,158,11,0.18)'}
-                stroke={isHov ? 'rgba(251,191,36,0.9)' : 'rgba(245,158,11,0.55)'}
-                strokeWidth={isHov ? 1.5 : 1}
+                fill={isHov ? 'rgba(251,191,36,0.32)' : 'rgba(245,158,11,0.22)'}
+                stroke={isHov ? 'rgba(251,191,36,0.95)' : 'rgba(245,158,11,0.7)'}
+                strokeWidth={isHov ? 1.8 : 1.2}
                 strokeDasharray="6 3"
-                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                style={{ cursor: 'pointer', transition: 'all 0.2s', pointerEvents: 'all' }}
                 onMouseEnter={() => setHovered(zone.id)}
                 onMouseLeave={() => setHovered(null)}
-                onTouchStart={() => setHovered(z => z === zone.id ? null : zone.id)}
               />
-              {/* Center dot */}
+              {/* Center dot — click to delete */}
               <circle
-                cx={pathGen.centroid(circle)[0]}
-                cy={pathGen.centroid(circle)[1]}
-                r={isHov ? 5 : 3}
+                cx={centroid[0]}
+                cy={centroid[1]}
+                r={isHov ? 6 : 4}
                 fill={isHov ? '#fbbf24' : '#f59e0b'}
                 stroke="#050b14"
                 strokeWidth={1.5}
-                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                style={{ cursor: 'pointer', transition: 'all 0.2s', pointerEvents: 'all' }}
                 onMouseEnter={() => setHovered(zone.id)}
                 onMouseLeave={() => setHovered(null)}
-                onClick={() => { onRemove(zone.id); toast.success('Zone supprimée') }}
-                onTouchEnd={() => { onRemove(zone.id); toast.success('Zone supprimée') }}
+                onClick={e => { e.stopPropagation(); onRemove(zone.id); toast.success('Zone supprimée') }}
               />
             </g>
           )
@@ -92,21 +89,21 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
     .filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.name.localeCompare(b.name))
 
-  // Convert SVG click to geographic coordinates (accounts for zoom/pan)
+  // Convert SVG click to geographic coordinates (accounts for zoom/pan + viewBox)
   const svgToLatLng = useCallback((e) => {
     const proj = projRef.current
     if (!proj) return null
     const svg = e.currentTarget
-    const rect = svg.getBoundingClientRect()
-    const svgX = (e.clientX - rect.left) * (MAP_W / rect.width)
-    const svgY = (e.clientY - rect.top) * (MAP_H / rect.height)
-    // Undo ZoomableGroup transform: translate(W/2 - cx*zoom, H/2 - cy*zoom) scale(zoom)
+    // createSVGPoint correctly handles viewBox, preserveAspectRatio, CSS transforms
+    const pt = svg.createSVGPoint()
+    pt.x = e.clientX
+    pt.y = e.clientY
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse())
+    // Undo ZoomableGroup: translate(W/2, H/2) scale(zoom) translate(-cx, -cy)
     const [cx, cy] = proj(position.coordinates)
     const { zoom } = position
-    const tx = MAP_W / 2 - cx * zoom
-    const ty = MAP_H / 2 - cy * zoom
-    const gX = (svgX - tx) / zoom
-    const gY = (svgY - ty) / zoom
+    const gX = cx + (svgPt.x - MAP_W / 2) / zoom
+    const gY = cy + (svgPt.y - MAP_H / 2) / zoom
     const coords = proj.invert([gX, gY])
     if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return null
     return { lat: coords[1], lng: coords[0] }
@@ -333,8 +330,6 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
           <ZoomableGroup zoom={position.zoom} center={position.coordinates} onMoveEnd={setPosition} maxZoom={12}>
             <ProjectionCapture projRef={projRef} />
 
-            <PaintedZones zones={zones} onRemove={onRemoveZone} />
-
             <Geographies geography={GEO_URL}>
               {({ geographies }) =>
                 geographies.map(geo => {
@@ -358,6 +353,9 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
                 })
               }
             </Geographies>
+
+            {/* Zones rendered AFTER countries so they appear on top */}
+            <PaintedZones zones={zones} onRemove={onRemoveZone} />
           </ZoomableGroup>
         </ComposableMap>
 

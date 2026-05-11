@@ -43,7 +43,7 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
   const [panelExpanded, setPanelExpanded] = useState(false)
 
   useEffect(() => {
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(country.name)}&format=json&limit=1&featuretype=country`,
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(country.name)}&format=json&limit=1`,
       { headers: { 'Accept-Language': 'fr' } })
       .then(r => r.json())
       .then(data => { if (data[0]) setCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]) })
