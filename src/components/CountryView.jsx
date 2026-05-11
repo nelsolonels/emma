@@ -94,9 +94,9 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-navy-800">
+    <div className="w-full h-full flex flex-col" style={{ background: '#080e1c' }}>
       {/* ── Header ────────────────────────────────── */}
-      <header className="flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-navy-500 bg-navy-700/80 backdrop-blur-sm flex-shrink-0">
+      <header className="flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-navy-500 bg-navy-800 flex-shrink-0" style={{ background: '#080e1c' }}>
         <button onClick={onBack} className="flex items-center gap-1.5 md:gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium flex-shrink-0 py-1.5 px-2 md:px-0 rounded-lg md:rounded-none active:bg-navy-600 md:active:bg-transparent">
           <ArrowLeft className="w-4 h-4" />
           <span className="hidden sm:inline">Carte</span>

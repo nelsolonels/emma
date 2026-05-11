@@ -17,46 +17,53 @@ function PaintedZones({ zones, onRemove }) {
   const [hovered, setHovered] = useState(null)
 
   if (!zones?.length || !pathGen) return null
+  const projection = pathGen.projection()
 
   return (
     <g>
       {zones.map(zone => {
-        const radiusDeg = zone.radiusKm / 111
+        if (!projection) return null
+        // Project center directly — works even for tiny zones (< 1px circle)
+        const svgCenter = projection([zone.lng, zone.lat])
+        if (!svgCenter || isNaN(svgCenter[0])) return null
+
+        const isHov = hovered === zone.id
+        const handlers = {
+          onMouseEnter: () => setHovered(zone.id),
+          onMouseLeave: () => setHovered(null),
+        }
+
+        // Circle path — only renders when zone is big enough to see
+        let circlePath = null
         try {
+          const radiusDeg = zone.radiusKm / 111
           const circle = geoCircle().center([zone.lng, zone.lat]).radius(radiusDeg)()
           const d = pathGen(circle)
-          if (!d) return null
-          const isHov = hovered === zone.id
-          const centroid = pathGen.centroid(circle)
-          if (!centroid || isNaN(centroid[0])) return null
-          return (
-            <g key={zone.id}>
-              <path
-                d={d}
-                fill={isHov ? 'rgba(251,191,36,0.32)' : 'rgba(245,158,11,0.22)'}
-                stroke={isHov ? 'rgba(251,191,36,0.95)' : 'rgba(245,158,11,0.7)'}
-                strokeWidth={isHov ? 1.8 : 1.2}
-                strokeDasharray="6 3"
+          if (d) circlePath = d
+        } catch {}
+
+        return (
+          <g key={zone.id}>
+            {circlePath && (
+              <path d={circlePath}
+                fill={isHov ? 'rgba(251,191,36,0.28)' : 'rgba(245,158,11,0.18)'}
+                stroke={isHov ? '#fbbf24' : 'rgba(245,158,11,0.7)'}
+                strokeWidth={isHov ? 1.6 : 1}
+                strokeDasharray="5 3"
                 style={{ cursor: 'pointer', transition: 'all 0.2s', pointerEvents: 'all' }}
-                onMouseEnter={() => setHovered(zone.id)}
-                onMouseLeave={() => setHovered(null)}
+                {...handlers}
               />
-              {/* Center dot — click to delete */}
-              <circle
-                cx={centroid[0]}
-                cy={centroid[1]}
-                r={isHov ? 6 : 4}
-                fill={isHov ? '#fbbf24' : '#f59e0b'}
-                stroke="#050b14"
-                strokeWidth={1.5}
-                style={{ cursor: 'pointer', transition: 'all 0.2s', pointerEvents: 'all' }}
-                onMouseEnter={() => setHovered(zone.id)}
-                onMouseLeave={() => setHovered(null)}
-                onClick={e => { e.stopPropagation(); onRemove(zone.id); toast.success('Zone supprimée') }}
-              />
-            </g>
-          )
-        } catch { return null }
+            )}
+            {/* Center dot — toujours visible, clic pour supprimer */}
+            <circle cx={svgCenter[0]} cy={svgCenter[1]} r={isHov ? 7 : 5}
+              fill={isHov ? '#fbbf24' : '#f59e0b'}
+              stroke="#050b14" strokeWidth={1.5}
+              style={{ cursor: 'pointer', transition: 'all 0.2s', pointerEvents: 'all' }}
+              {...handlers}
+              onClick={e => { e.stopPropagation(); onRemove(zone.id); toast.success('Zone supprimée') }}
+            />
+          </g>
+        )
       })}
     </g>
   )
@@ -249,7 +256,7 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
       </aside>
 
       {/* ── Map area ──────────────────────────────── */}
-      <div className="flex-1 relative" style={{ background: 'radial-gradient(ellipse at 50% 60%, #0a1628 0%, #050b14 80%)' }}>
+      <div className="flex-1 relative" style={{ background: 'radial-gradient(ellipse at 50% 55%, #0d1e38 0%, #040810 75%)' }}>
 
         {/* Mobile top bar */}
         <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 md:hidden" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
@@ -343,8 +350,8 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
                       onMouseLeave={() => setTooltip(null)}
                       onClick={() => { if (!painting) { const c = geoCentroid(geo); onCountryClick({ ISO_A3: iso, name, lat: c[1], lng: c[0] }) } }}
                       style={{
-                        default: { fill: visited ? '#d97706' : '#1a2744', stroke: '#0a1220', strokeWidth: 0.4, outline: 'none', cursor: painting ? 'crosshair' : 'pointer' },
-                        hover: { fill: visited ? '#f59e0b' : '#243a5e', stroke: visited ? '#fbbf24' : '#2d4a7a', strokeWidth: 0.8, outline: 'none', cursor: painting ? 'crosshair' : 'pointer' },
+                        default: { fill: visited ? '#b45309' : '#2d4a7a', stroke: '#0d1f38', strokeWidth: 0.5, outline: 'none', cursor: painting ? 'crosshair' : 'pointer' },
+                        hover: { fill: visited ? '#f59e0b' : '#3d6099', stroke: visited ? '#fbbf24' : '#5480bb', strokeWidth: 1, outline: 'none', cursor: painting ? 'crosshair' : 'pointer' },
                         pressed: { fill: visited ? '#92400e' : '#1e3a6e', outline: 'none' },
                       }}
                     />
