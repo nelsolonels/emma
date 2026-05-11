@@ -72,7 +72,6 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
   const handleSaveNote = (note) => {
     onAddNote({ ...note, lat: pickedLoc.lat, lng: pickedLoc.lng })
     setShowModal(false); setPickedLoc(null)
-    if (!isVisited) onToggleVisited()
     toast.success('Souvenir sauvegardé ✨')
     setPanelExpanded(true)
   }

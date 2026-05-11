@@ -10,7 +10,7 @@ export default function App() {
   const travel = useTravel()
 
   return (
-    <div className="w-screen h-screen overflow-hidden bg-space font-sans">
+    <div className="w-screen h-screen overflow-hidden bg-space font-sans relative">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -24,23 +24,29 @@ export default function App() {
           success: { iconTheme: { primary: '#f59e0b', secondary: '#132236' } },
         }}
       />
-      <AnimatePresence mode="wait">
-        {!selectedCountry ? (
-          <motion.div key="world" className="w-full h-full"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 1.04 }}
-            transition={{ duration: 0.4 }}>
-            <WorldMap
-              visitedCountries={travel.visitedCountries}
-              zones={travel.zones}
-              onCountryClick={setSelectedCountry}
-              onAddZone={travel.addZone}
-              onRemoveZone={travel.removeZone}
-            />
-          </motion.div>
-        ) : (
-          <motion.div key="country" className="w-full h-full"
-            initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.4 }}>
+
+      {/* WorldMap always mounted — never re-fetches GeoJSON */}
+      <div className="absolute inset-0">
+        <WorldMap
+          visitedCountries={travel.visitedCountries}
+          zones={travel.zones}
+          onCountryClick={setSelectedCountry}
+          onAddZone={travel.addZone}
+          onRemoveZone={travel.removeZone}
+        />
+      </div>
+
+      {/* CountryView slides over the top */}
+      <AnimatePresence>
+        {selectedCountry && (
+          <motion.div
+            key={selectedCountry.ISO_A3}
+            className="absolute inset-0 z-10"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.3 }}
+          >
             <CountryView
               country={selectedCountry}
               notes={travel.getNotes(selectedCountry.ISO_A3)}
