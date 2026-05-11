@@ -18,7 +18,7 @@ function markerIcon(color = '#f59e0b') {
 function MapAutoCenter({ center }) {
   const map = useMap()
   useEffect(() => {
-    if (!center || (center[0] === 20 && center[1] === 0)) return
+    if (!center) return
     map.flyTo(center, 5, { duration: 1.2 })
   }, [center, map])
   return null
@@ -32,7 +32,9 @@ function ClickHandler({ enabled, onPick }) {
 const TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 
 export default function CountryView({ country, notes, isVisited, onBack, onAddNote, onDeleteNote, onToggleVisited }) {
-  const [center, setCenter] = useState([20, 0])
+  const [center, setCenter] = useState(
+    country.lat != null ? [country.lat, country.lng] : [20, 0]
+  )
   const [picking, setPicking] = useState(false)
   const [pickedLoc, setPickedLoc] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -109,7 +111,7 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
                 : 'bg-navy-600 text-slate-400 border border-navy-500 hover:text-amber-400'
             }`}>
             <Check className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden xs:inline">{isVisited ? 'Visité' : 'Visité ?'}</span>
+            <span className="hidden sm:inline">{isVisited ? 'Visité' : 'Visité ?'}</span>
           </button>
 
           <button onClick={() => setPicking(p => !p)}
@@ -127,7 +129,7 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
       {/* ── Body ──────────────────────────────────── */}
       <div className="flex flex-1 min-h-0 relative">
         {/* Map */}
-        <div className={`flex-1 relative ${picking ? 'cursor-crosshair' : ''}`}>
+        <div className={`flex-1 relative pb-14 md:pb-0 ${picking ? 'cursor-crosshair' : ''}`}>
           <MapContainer key={country.ISO_A3} center={center} zoom={4}
             style={{ width: '100%', height: '100%' }} zoomControl={false}>
             <TileLayer url={TILE} attribution='&copy; CARTO' />

@@ -112,8 +112,9 @@ body {
   .notes-panel-aside {
     position: fixed;
     bottom: 0; left: 0; right: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .notes-panel-aside.panel-collapsed { height: 56px; }
+  .notes-panel-aside.panel-collapsed { height: calc(56px + env(safe-area-inset-bottom, 0px)); }
   .notes-panel-aside.panel-expanded { height: 62vh; }
 }
 

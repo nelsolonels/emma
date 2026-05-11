@@ -4,21 +4,21 @@ import { X, MapPin, Search, Loader } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 
 const PRESETS = [
-  { label: 'Ville', km: 30 },
-  { label: 'Région', km: 150 },
-  { label: 'Pays', km: 500 },
-  { label: 'Continent', km: 2000 },
+  { label: 'Quartier', km: 3 },
+  { label: 'Ville', km: 10 },
+  { label: 'Région', km: 100 },
+  { label: 'Pays', km: 400 },
 ]
 
 export default function RadiusModal({ location, onSave, onClose }) {
-  const [radius, setRadius] = useState(100)
+  const [radius, setRadius] = useState(10)
   const [label, setLabel] = useState('')
   const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
   const [pickedLoc, setPickedLoc] = useState(location || null)
 
-  const pct = ((radius - 5) / (3000 - 5)) * 100
+  const pct = ((radius - 1) / (3000 - 1)) * 100
 
   const searchPlace = async () => {
     if (!search.trim()) return
@@ -158,13 +158,13 @@ export default function RadiusModal({ location, onSave, onClose }) {
             </div>
 
             <input
-              type="range" min="5" max="3000" step="5" value={radius}
+              type="range" min="1" max="3000" step="1" value={radius}
               onChange={e => setRadius(Number(e.target.value))}
               className="radius-slider w-full"
               style={{ '--pct': `${pct}%` }}
             />
             <div className="flex justify-between text-xs text-slate-600 mt-1">
-              <span>5 km</span><span>3 000 km</span>
+              <span>1 km</span><span>3 000 km</span>
             </div>
           </div>
 

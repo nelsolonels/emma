@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup, useMapContext } from 'react-simple-maps'
-import { geoCircle } from 'd3-geo'
+import { geoCircle, geoCentroid } from 'd3-geo'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Globe, MapPin, Camera, BookOpen, ChevronRight, Search, TrendingUp, X, Compass, Menu, Paintbrush, Trash2 } from 'lucide-react'
 import { AnimatePresence as AP } from 'framer-motion'
@@ -143,7 +143,6 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
       <aside className={`
         fixed md:relative z-30 md:z-auto
         h-full flex-shrink-0
-        w-72 md:w-[280px]
         transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         sidebar-panel
@@ -253,7 +252,7 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
       <div className="flex-1 relative" style={{ background: 'radial-gradient(ellipse at 50% 60%, #0a1628 0%, #050b14 80%)' }}>
 
         {/* Mobile top bar */}
-        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 pt-safe pt-4 md:hidden">
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 md:hidden" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 1rem)' }}>
           <button onClick={() => setSidebarOpen(true)}
             className="w-11 h-11 rounded-xl bg-navy-700/90 backdrop-blur border border-navy-500 flex items-center justify-center text-slate-300 shadow-lg active:scale-95 transition-transform">
             <Menu className="w-5 h-5" />
@@ -342,7 +341,7 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
                       onMouseEnter={e => { setTooltip({ name, visited, noteCount }); setTooltipPos({ x: e.clientX, y: e.clientY }) }}
                       onMouseMove={e => setTooltipPos({ x: e.clientX, y: e.clientY })}
                       onMouseLeave={() => setTooltip(null)}
-                      onClick={() => { if (!painting) onCountryClick({ ISO_A3: iso, name }) }}
+                      onClick={() => { if (!painting) { const c = geoCentroid(geo); onCountryClick({ ISO_A3: iso, name, lat: c[1], lng: c[0] }) } }}
                       style={{
                         default: { fill: visited ? '#d97706' : '#1a2744', stroke: '#0a1220', strokeWidth: 0.4, outline: 'none', cursor: painting ? 'crosshair' : 'pointer' },
                         hover: { fill: visited ? '#f59e0b' : '#243a5e', stroke: visited ? '#fbbf24' : '#2d4a7a', strokeWidth: 0.8, outline: 'none', cursor: painting ? 'crosshair' : 'pointer' },
