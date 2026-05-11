@@ -250,7 +250,14 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-navy-500">
+        <div className="mt-4 pt-4 border-t border-navy-500 flex flex-col gap-2">
+          <button
+            onClick={() => { setShowRadiusModal(true); setPaintLoc(null) }}
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400 text-sm font-medium hover:bg-amber-400/20 transition-all active:scale-95"
+          >
+            <Paintbrush className="w-4 h-4 flex-shrink-0" />
+            Colorier une ville…
+          </button>
           <p className="text-xs text-slate-600 text-center">Clic sur un pays · Molette pour zoomer</p>
         </div>
       </aside>

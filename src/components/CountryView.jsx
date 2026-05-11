@@ -208,7 +208,7 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
                     <button key={i} onClick={() => {
                       setPickedLoc({ lat: parseFloat(r.lat), lng: parseFloat(r.lon) })
                       setCityQuery(r.display_name.split(',')[0]); setCityResults([])
-                      setShowModal(true)
+                      setShowChoice(true)
                     }}
                       className="w-full flex items-start gap-2 px-3 py-2.5 hover:bg-navy-500 text-left border-b border-navy-500 last:border-0 transition-colors">
                       <MapPin className="w-3.5 h-3.5 text-teal-400 mt-0.5 flex-shrink-0" />
