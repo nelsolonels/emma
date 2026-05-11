@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { supabase } from '../lib/supabase'
+import { supabase, hasSupabase } from '../lib/supabase'
 
 const LS_KEY = 'travelmap_v1'
 
@@ -9,12 +9,11 @@ function loadLocal() {
 }
 
 async function fetchFromSupabase(userId) {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('travel_data')
     .select('data')
     .eq('user_id', userId)
     .single()
-  if (error && error.code !== 'PGRST116') console.error(error)
   return data?.data?.visitedCountries || null
 }
 
@@ -31,34 +30,30 @@ export function useTravel(userId) {
   const [ready, setReady] = useState(false)
   const saveTimer = useRef(null)
 
-  // Load data when userId changes
   useEffect(() => {
     setReady(false)
-    if (!userId) {
+    if (!userId || !hasSupabase) {
       setVisitedCountries(loadLocal())
       setReady(true)
       return
     }
-    fetchFromSupabase(userId).then(remote => {
-      setVisitedCountries(remote ?? loadLocal())
-      setReady(true)
-    })
+    fetchFromSupabase(userId)
+      .then(remote => { setVisitedCountries(remote ?? loadLocal()); setReady(true) })
+      .catch(() => { setVisitedCountries(loadLocal()); setReady(true) })
   }, [userId])
 
-  // Persist on every change
   useEffect(() => {
     if (!ready) return
-    if (!userId) {
+    if (!userId || !hasSupabase) {
       localStorage.setItem(LS_KEY, JSON.stringify(visitedCountries))
       return
     }
-    // Debounce Supabase writes by 800ms
     clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => saveToSupabase(userId, visitedCountries), 800)
   }, [visitedCountries, userId, ready])
 
   const isVisited = (iso) => !!visitedCountries[iso]
-  const getNotes = (iso) => visitedCountries[iso]?.notes || []
+  const getNotes  = (iso) => visitedCountries[iso]?.notes || []
 
   const toggleVisited = (iso, name) => {
     setVisitedCountries(prev => {

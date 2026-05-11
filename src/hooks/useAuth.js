@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, hasSupabase } from '../lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // If Supabase isn't configured, skip auth entirely (localStorage mode)
+  const [loading, setLoading] = useState(hasSupabase)
 
   useEffect(() => {
+    if (!hasSupabase) return
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
@@ -18,13 +21,18 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = (email, password) =>
-    supabase.auth.signUp({ email, password })
-
   const signIn = (email, password) =>
-    supabase.auth.signInWithPassword({ email, password })
+    hasSupabase
+      ? supabase.auth.signInWithPassword({ email, password })
+      : Promise.resolve({ error: { message: 'Supabase non configuré' } })
 
-  const signOut = () => supabase.auth.signOut()
+  const signUp = (email, password) =>
+    hasSupabase
+      ? supabase.auth.signUp({ email, password })
+      : Promise.resolve({ error: { message: 'Supabase non configuré' } })
 
-  return { user, loading, signUp, signIn, signOut }
+  const signOut = () =>
+    hasSupabase ? supabase.auth.signOut() : Promise.resolve()
+
+  return { user, loading, hasSupabase, signIn, signUp, signOut }
 }

@@ -8,7 +8,7 @@ import { useTravel } from './hooks/useTravel'
 import { useAuth } from './hooks/useAuth'
 
 export default function App() {
-  const { user, loading: authLoading, signIn, signUp, signOut } = useAuth()
+  const { user, loading: authLoading, hasSupabase, signIn, signUp, signOut } = useAuth()
   const travel = useTravel(user?.id)
   const [selectedCountry, setSelectedCountry] = useState(null)
 
@@ -32,9 +32,9 @@ export default function App() {
         />
       </div>
 
-      {/* Auth overlay — shown when not logged in or still loading */}
+      {/* Auth overlay — only when Supabase is configured and user not logged in */}
       <AnimatePresence>
-        {(!user || authLoading) && (
+        {hasSupabase && (!user || authLoading) && (
           authLoading ? (
             <motion.div key="loading"
               className="fixed inset-0 z-40 flex items-center justify-center"
@@ -54,7 +54,7 @@ export default function App() {
 
       {/* Country bottom sheet */}
       <AnimatePresence>
-        {user && selectedCountry && (
+        {(!hasSupabase || user) && selectedCountry && (
           <CountrySheet
             key={selectedCountry.ISO_A3}
             country={selectedCountry}
