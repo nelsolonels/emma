@@ -83,7 +83,7 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col bg-navy-800">
       {/* ── Header ────────────────────────────────── */}
       <header className="flex items-center gap-2 md:gap-4 px-3 md:px-6 py-3 md:py-4 border-b border-navy-500 bg-navy-700/80 backdrop-blur-sm flex-shrink-0">
         <button onClick={onBack} className="flex items-center gap-1.5 md:gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium flex-shrink-0 py-1.5 px-2 md:px-0 rounded-lg md:rounded-none active:bg-navy-600 md:active:bg-transparent">
@@ -126,11 +126,11 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
       </header>
 
       {/* ── Body ──────────────────────────────────── */}
-      <div className="flex flex-1 min-h-0 relative">
+      <div className="flex flex-1 min-h-0">
         {/* Map */}
-        <div className={`flex-1 relative pb-14 md:pb-0 ${picking ? 'cursor-crosshair' : ''}`}>
+        <div className={`flex-1 relative ${picking ? 'cursor-crosshair' : ''}`}>
           <MapContainer key={country.ISO_A3} center={center} zoom={4}
-            style={{ width: '100%', height: '100%' }} zoomControl={false}>
+            style={{ position: 'absolute', inset: 0 }} zoomControl={false}>
             <TileLayer url={TILE} attribution='&copy; CARTO' />
             <MapAutoCenter center={center} />
             <ClickHandler enabled={picking} onPick={handlePick} />

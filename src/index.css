@@ -95,38 +95,33 @@ body {
   cursor: pointer;
 }
 
-/* ─── Notes panel — responsive ───────────────────────── */
+/* ─── Notes panel — mobile bottom sheet ─────────────── */
 .notes-panel-aside {
   display: flex;
   flex-direction: column;
-  background: rgba(13, 27, 42, 0.95);
-  backdrop-filter: blur(12px);
+  background: #0d1b2a;
   border-top: 1px solid #1a2d4a;
-  z-index: 10;
-  transition: height 0.3s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
-/* Mobile: fixed bottom sheet */
 @media (max-width: 767px) {
   .notes-panel-aside {
     position: fixed;
     bottom: 0; left: 0; right: 0;
+    z-index: 20;
+    transition: height 0.3s cubic-bezier(0.4,0,0.2,1);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  .notes-panel-aside.panel-collapsed { height: calc(56px + env(safe-area-inset-bottom, 0px)); }
-  .notes-panel-aside.panel-expanded { height: 62vh; }
+  .notes-panel-aside.panel-collapsed { height: 56px; }
+  .notes-panel-aside.panel-expanded  { height: 62vh; }
 }
 
-/* Desktop: right panel */
 @media (min-width: 768px) {
   .notes-panel-aside {
-    position: relative;
-    width: 320px;
-    flex-shrink: 0;
+    width: 300px;
     border-top: none;
     border-left: 1px solid #1a2d4a;
-    height: auto;
   }
 }
 
