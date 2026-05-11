@@ -70,7 +70,6 @@ function ProjectionCapture({ projRef }) {
 }
 
 export default function WorldMap({ visitedCountries, zones, onCountryClick, onAddZone, onRemoveZone }) {
-  const [mapLoaded, setMapLoaded] = useState(false)
   const [tooltip, setTooltip] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [search, setSearch] = useState('')
@@ -331,9 +330,8 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
             <ProjectionCapture projRef={projRef} />
 
             <Geographies geography={GEO_URL}>
-              {({ geographies }) => {
-                if (geographies.length > 0 && !mapLoaded) setMapLoaded(true)
-                return geographies.map(geo => {
+              {({ geographies }) =>
+                geographies.map(geo => {
                   const iso = geo.properties.ISO_A3 === '-99' ? geo.properties.ISO_A3_EH : geo.properties.ISO_A3
                   const name = geo.properties.ADMIN
                   const visited = !!visitedCountries[iso]
@@ -352,7 +350,7 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
                     />
                   )
                 })
-              }}
+              }
             </Geographies>
 
             {/* Zones rendered AFTER countries so they appear on top */}
@@ -374,23 +372,6 @@ export default function WorldMap({ visitedCountries, zones, onCountryClick, onAd
           {zones.length > 0 && <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm border border-dashed border-amber-400/50 bg-amber-400/15" /><span>Zone peinte</span></div>}
         </div>
       </div>
-
-      {/* Loading overlay */}
-      <AnimatePresence>
-        {!mapLoaded && (
-          <motion.div
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center"
-            style={{ background: '#050b14' }}
-            initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }}
-          >
-            <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center mb-4">
-              <Globe className="w-5 h-5 text-amber-400 animate-pulse" />
-            </div>
-            <p className="text-white font-bold tracking-widest text-sm mb-1">EMMA</p>
-            <p className="text-slate-500 text-xs">Chargement de la carte…</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Country tooltip */}
       <AnimatePresence>
