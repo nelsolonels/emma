@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { geoCentroid } from 'd3-geo'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Globe, MapPin, Camera, BookOpen, ChevronRight, Search, TrendingUp, X, Compass, Menu } from 'lucide-react'
+import { Globe, MapPin, Camera, ChevronRight, Search, X, Compass, Menu, LogOut } from 'lucide-react'
 
 const GEO_URL = '/countries.geojson'
 const MAP_W = 800
 const MAP_H = 450
 
-export default function WorldMap({ visitedCountries, onCountryClick }) {
+export default function WorldMap({ visitedCountries, onCountryClick, userEmail, onSignOut }) {
   const [tooltip, setTooltip] = useState(null)
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
   const [search, setSearch] = useState('')
@@ -63,18 +63,6 @@ export default function WorldMap({ visitedCountries, onCountryClick }) {
           <StatCard value={notesCount} label="Souvenirs" icon={<Camera className="w-4 h-4" />} color="teal" />
         </div>
 
-        {/* Progress */}
-        <div className="mb-5">
-          <div className="flex justify-between text-xs text-slate-400 mb-2">
-            <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> Monde exploré</span>
-            <span className="text-amber-400 font-medium">{Math.round((visitedCount / 195) * 100)}%</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-[#1a2d4a] overflow-hidden">
-            <motion.div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300"
-              initial={{ width: 0 }} animate={{ width: `${(visitedCount / 195) * 100}%` }}
-              transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }} />
-          </div>
-        </div>
 
         {/* Search */}
         <div className="relative mb-4">
@@ -116,8 +104,16 @@ export default function WorldMap({ visitedCountries, onCountryClick }) {
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-[#1a2d4a]">
+        <div className="mt-4 pt-4 border-t border-[#1a2d4a] flex flex-col gap-3">
           <p className="text-xs text-slate-600 text-center">Clic sur un pays · Molette pour zoomer</p>
+          <div className="flex items-center gap-2 px-1">
+            <span className="flex-1 text-xs text-slate-500 truncate">{userEmail}</span>
+            <button onClick={onSignOut}
+              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors flex-shrink-0 py-1 px-2 rounded-lg hover:bg-red-400/10">
+              <LogOut className="w-3.5 h-3.5" />
+              Déconnexion
+            </button>
+          </div>
         </div>
       </aside>
 

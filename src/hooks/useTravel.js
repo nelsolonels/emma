@@ -1,22 +1,61 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import { supabase } from '../lib/supabase'
 
-const COUNTRIES_KEY = 'travelmap_v1'
-const ZONES_KEY = 'travelmap_zones_v1'
+const LS_KEY = 'travelmap_v1'
 
-function load() {
-  try { return JSON.parse(localStorage.getItem(COUNTRIES_KEY)) || {} } catch { return {} }
-}
-function loadZones() {
-  try { return JSON.parse(localStorage.getItem(ZONES_KEY)) || [] } catch { return [] }
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {} } catch { return {} }
 }
 
-export function useTravel() {
-  const [visitedCountries, setVisitedCountries] = useState(load)
-  const [zones, setZones] = useState(loadZones)
+async function fetchFromSupabase(userId) {
+  const { data, error } = await supabase
+    .from('travel_data')
+    .select('data')
+    .eq('user_id', userId)
+    .single()
+  if (error && error.code !== 'PGRST116') console.error(error)
+  return data?.data?.visitedCountries || null
+}
 
-  useEffect(() => { localStorage.setItem(COUNTRIES_KEY, JSON.stringify(visitedCountries)) }, [visitedCountries])
-  useEffect(() => { localStorage.setItem(ZONES_KEY, JSON.stringify(zones)) }, [zones])
+async function saveToSupabase(userId, visitedCountries) {
+  await supabase.from('travel_data').upsert({
+    user_id: userId,
+    data: { visitedCountries },
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'user_id' })
+}
+
+export function useTravel(userId) {
+  const [visitedCountries, setVisitedCountries] = useState({})
+  const [ready, setReady] = useState(false)
+  const saveTimer = useRef(null)
+
+  // Load data when userId changes
+  useEffect(() => {
+    setReady(false)
+    if (!userId) {
+      setVisitedCountries(loadLocal())
+      setReady(true)
+      return
+    }
+    fetchFromSupabase(userId).then(remote => {
+      setVisitedCountries(remote ?? loadLocal())
+      setReady(true)
+    })
+  }, [userId])
+
+  // Persist on every change
+  useEffect(() => {
+    if (!ready) return
+    if (!userId) {
+      localStorage.setItem(LS_KEY, JSON.stringify(visitedCountries))
+      return
+    }
+    // Debounce Supabase writes by 800ms
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => saveToSupabase(userId, visitedCountries), 800)
+  }, [visitedCountries, userId, ready])
 
   const isVisited = (iso) => !!visitedCountries[iso]
   const getNotes = (iso) => visitedCountries[iso]?.notes || []
@@ -37,17 +76,10 @@ export function useTravel() {
 
   const deleteNote = (iso, noteId) => {
     setVisitedCountries(prev => ({
-      ...prev, [iso]: { ...prev[iso], notes: prev[iso].notes.filter(n => n.id !== noteId) }
+      ...prev,
+      [iso]: { ...prev[iso], notes: prev[iso].notes.filter(n => n.id !== noteId) },
     }))
   }
 
-  const addZone = (zone) => {
-    setZones(prev => [...prev, { ...zone, id: zone.id || uuidv4() }])
-  }
-
-  const removeZone = (id) => {
-    setZones(prev => prev.filter(z => z.id !== id))
-  }
-
-  return { visitedCountries, zones, isVisited, getNotes, toggleVisited, addNote, deleteNote, addZone, removeZone }
+  return { visitedCountries, ready, isVisited, getNotes, toggleVisited, addNote, deleteNote }
 }
