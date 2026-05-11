@@ -3,9 +3,10 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Plus, MapPin, Camera, Star, Trash2, Search, X, Check, Calendar, Tag, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Plus, MapPin, Camera, Star, Trash2, Search, X, Check, Calendar, Tag, ChevronUp, Paintbrush } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import NoteModal from './NoteModal'
+import RadiusModal from './RadiusModal'
 import toast from 'react-hot-toast'
 
 function markerIcon(color = '#f59e0b') {
@@ -31,13 +32,15 @@ function ClickHandler({ enabled, onPick }) {
 
 const TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 
-export default function CountryView({ country, notes, isVisited, onBack, onAddNote, onDeleteNote, onToggleVisited }) {
+export default function CountryView({ country, notes, isVisited, onBack, onAddNote, onDeleteNote, onToggleVisited, onAddZone }) {
   const [center, setCenter] = useState(
     country.lat != null ? [country.lat, country.lng] : [20, 0]
   )
   const [picking, setPicking] = useState(false)
   const [pickedLoc, setPickedLoc] = useState(null)
+  const [showChoice, setShowChoice] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [showZoneModal, setShowZoneModal] = useState(false)
   const [selected, setSelected] = useState(null)
   const [cityQuery, setCityQuery] = useState('')
   const [cityResults, setCityResults] = useState([])
@@ -53,7 +56,7 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
   }, [country.name])
 
   const handlePick = useCallback((latlng) => {
-    setPickedLoc(latlng); setShowModal(true); setPicking(false)
+    setPickedLoc(latlng); setShowChoice(true); setPicking(false)
   }, [])
 
   const handleCitySearch = async () => {
@@ -75,6 +78,14 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
     toast.success('Souvenir sauvegardé ✨')
     setPanelExpanded(true)
   }
+
+  const handleSaveZone = (zone) => {
+    onAddZone(zone)
+    setShowZoneModal(false); setPickedLoc(null)
+    toast.success(`Zone "${zone.label}" colorée !`)
+  }
+
+  const cancelChoice = () => { setShowChoice(false); setPickedLoc(null) }
 
   const handleDeleteNote = (noteId) => {
     onDeleteNote(noteId)
@@ -234,13 +245,63 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
         </aside>
       </div>
 
-      {/* Note Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <NoteModal initialCity={cityQuery} location={pickedLoc}
-            onSave={handleSaveNote} onClose={() => { setShowModal(false); setPickedLoc(null) }} />
-        )}
-      </AnimatePresence>
+      {/* Choice modal — via portal pour passer au-dessus de Leaflet */}
+      {createPortal(
+        <AnimatePresence>
+          {showChoice && pickedLoc && (
+            <motion.div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={cancelChoice}>
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+              <motion.div className="relative w-full sm:max-w-sm bg-navy-700 border border-navy-500 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden"
+                initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+                onClick={e => e.stopPropagation()}>
+                <div className="sm:hidden flex justify-center pt-3 pb-1"><div className="w-10 h-1 rounded-full bg-navy-500" /></div>
+                <div className="p-5">
+                  <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-4 text-center">Que veux-tu faire ici ?</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={() => { setShowChoice(false); setShowModal(true) }}
+                      className="flex flex-col items-center gap-3 p-5 rounded-xl bg-teal-400/10 border border-teal-400/30 hover:bg-teal-400/20 transition-all active:scale-95">
+                      <Camera className="w-7 h-7 text-teal-400" />
+                      <span className="text-teal-300 text-sm font-semibold">Souvenir</span>
+                    </button>
+                    <button onClick={() => { setShowChoice(false); setShowZoneModal(true) }}
+                      className="flex flex-col items-center gap-3 p-5 rounded-xl bg-amber-400/10 border border-amber-400/30 hover:bg-amber-400/20 transition-all active:scale-95">
+                      <Paintbrush className="w-7 h-7 text-amber-400" />
+                      <span className="text-amber-300 text-sm font-semibold">Colorier</span>
+                    </button>
+                  </div>
+                  <button onClick={cancelChoice} className="w-full mt-3 py-2.5 text-slate-500 text-sm hover:text-slate-300 transition-colors">Annuler</button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Note Modal — via portal */}
+      {createPortal(
+        <AnimatePresence>
+          {showModal && (
+            <NoteModal initialCity={cityQuery} location={pickedLoc}
+              onSave={handleSaveNote} onClose={() => { setShowModal(false); setPickedLoc(null) }} />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Zone Modal — via portal */}
+      {createPortal(
+        <AnimatePresence>
+          {showZoneModal && (
+            <RadiusModal location={pickedLoc}
+              onSave={handleSaveZone} onClose={() => { setShowZoneModal(false); setPickedLoc(null) }} />
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Note Detail */}
       <AnimatePresence>

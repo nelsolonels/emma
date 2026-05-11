@@ -55,6 +55,7 @@ export default function App() {
               onAddNote={(note) => travel.addNote(selectedCountry.ISO_A3, selectedCountry.name, note)}
               onDeleteNote={(id) => travel.deleteNote(selectedCountry.ISO_A3, id)}
               onToggleVisited={() => travel.toggleVisited(selectedCountry.ISO_A3, selectedCountry.name)}
+              onAddZone={travel.addZone}
             />
           </motion.div>
         )}
