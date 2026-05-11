@@ -1,13 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
-import { X, Check, Camera, Star, Trash2, Calendar, MapPin } from 'lucide-react'
+import { X, Check, Camera, Star, Trash2, Calendar } from 'lucide-react'
 import NoteModal from './NoteModal'
 import toast from 'react-hot-toast'
+
+function useCountryPhoto(nameEn, name) {
+  const [photo, setPhoto] = useState(null)
+
+  useEffect(() => {
+    setPhoto(null)
+    const query = nameEn || name
+    if (!query) return
+    let cancelled = false
+    fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (!cancelled && d.originalimage?.source) setPhoto(d.originalimage.source)
+        else if (!cancelled && d.thumbnail?.source) setPhoto(d.thumbnail.source)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [nameEn, name])
+
+  return photo
+}
 
 export default function CountrySheet({ country, isVisited, notes, onClose, onToggleVisited, onAddNote, onDeleteNote }) {
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [selected, setSelected] = useState(null)
+  const photo = useCountryPhoto(country.nameEn, country.name)
 
   const handleSaveNote = (note) => {
     onAddNote(note)
@@ -34,49 +56,73 @@ export default function CountrySheet({ country, isVisited, notes, onClose, onTog
 
       {/* Sheet */}
       <motion.div
-        className="fixed bottom-0 left-0 right-0 z-30 flex flex-col rounded-t-2xl shadow-2xl"
-        style={{ background: '#0a1628', borderTop: '1px solid #1a2d4a', maxHeight: '72vh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="fixed bottom-0 left-0 right-0 z-30 flex flex-col rounded-t-2xl shadow-2xl overflow-hidden"
+        style={{ background: '#0a1628', borderTop: '1px solid #1a2d4a', maxHeight: '78vh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 32, stiffness: 320 }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-[#1a2d4a]" />
-        </div>
+        {/* Country photo header */}
+        <div className="relative flex-shrink-0 h-44 bg-[#0d1b2a]">
+          {photo ? (
+            <motion.img
+              src={photo}
+              alt={country.name}
+              className="w-full h-full object-cover"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            />
+          ) : (
+            <div className="w-full h-full animate-pulse" style={{ background: 'linear-gradient(135deg, #0d1b2a 0%, #132236 100%)' }} />
+          )}
 
-        {/* Header */}
-        <div className="flex items-center gap-3 px-5 pt-2 pb-4 flex-shrink-0">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-white font-bold text-xl truncate">{country.name}</h2>
-            {notes.length > 0 && (
-              <p className="text-slate-500 text-xs mt-0.5">{notes.length} souvenir{notes.length > 1 ? 's' : ''}</p>
-            )}
-          </div>
-          <button
-            onClick={() => { onToggleVisited(); toast.success(isVisited ? 'Retiré des pays visités' : `${country.name} ajouté !`) }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${
-              isVisited
-                ? 'bg-amber-400 text-[#050b14] shadow-lg shadow-amber-900/30'
-                : 'bg-[#132236] text-slate-400 border border-[#1a2d4a] hover:text-amber-400 hover:border-amber-400/40'
-            }`}
-          >
-            <Check className="w-4 h-4" />
-            <span className="hidden sm:inline">{isVisited ? 'Visité' : 'Marquer visité'}</span>
-          </button>
+          {/* Dark gradient overlay */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0a1628 0%, transparent 60%)' }} />
+
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white transition-colors flex-shrink-0"
-            style={{ background: '#132236' }}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', color: '#fff' }}
           >
             <X className="w-4 h-4" />
           </button>
+
+          {/* Drag handle */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2">
+            <div className="w-10 h-1 rounded-full bg-white/30" />
+          </div>
+
+          {/* Country name + visited toggle overlaid on photo */}
+          <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-white font-bold text-2xl drop-shadow-lg">{country.name}</h2>
+              {notes.length > 0 && (
+                <p className="text-white/60 text-xs mt-0.5">{notes.length} souvenir{notes.length > 1 ? 's' : ''}</p>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                onToggleVisited()
+                toast.success(isVisited ? 'Retiré des pays visités' : `${country.name} ajouté !`)
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-shrink-0 shadow-lg ${
+                isVisited
+                  ? 'bg-amber-400 text-[#050b14]'
+                  : 'bg-white/10 text-white border border-white/20 hover:bg-white/20 backdrop-blur-sm'
+              }`}
+            >
+              <Check className="w-4 h-4" />
+              <span>{isVisited ? 'Visité' : 'Marquer'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Add note button */}
-        <div className="px-5 pb-4 flex-shrink-0">
+        <div className="px-5 py-4 flex-shrink-0 border-b border-[#1a2d4a]">
           <button
             onClick={() => setShowNoteModal(true)}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
@@ -87,13 +133,13 @@ export default function CountrySheet({ country, isVisited, notes, onClose, onTog
           </button>
         </div>
 
-        {/* Notes */}
-        <div className="flex-1 overflow-y-auto custom-scroll px-5 pb-5 min-h-0">
+        {/* Notes list */}
+        <div className="flex-1 overflow-y-auto custom-scroll px-5 py-4 min-h-0">
           {notes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center text-slate-600">
               <Camera className="w-9 h-9 mb-2 opacity-25" />
               <p className="text-sm">Aucun souvenir pour {country.name}</p>
-              <p className="text-xs mt-1 opacity-60">Appuie sur "Souvenir" pour en ajouter un</p>
+              <p className="text-xs mt-1 opacity-60">Appuie sur le bouton ci-dessus pour en ajouter un</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -236,18 +282,10 @@ function NoteDetail({ note, onClose, onDelete }) {
               )}
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              <button
-                onClick={onDelete}
-                className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors"
-                style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}
-              >
+              <button onClick={onDelete} className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
                 <Trash2 className="w-4 h-4" />
               </button>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors text-slate-400 hover:text-white"
-                style={{ background: '#132236' }}
-              >
+              <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors text-slate-400 hover:text-white" style={{ background: '#132236' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>

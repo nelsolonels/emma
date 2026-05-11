@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import WorldMap from './components/WorldMap'
 import CountrySheet from './components/CountrySheet'
@@ -12,27 +12,8 @@ export default function App() {
   const travel = useTravel(user?.id)
   const [selectedCountry, setSelectedCountry] = useState(null)
 
-  // Show nothing while checking session
-  if (authLoading) {
-    return (
-      <div className="w-screen h-screen flex items-center justify-center" style={{ background: '#040810' }}>
-        <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  // Not logged in → auth screen
-  if (!user) {
-    return (
-      <>
-        <Toaster position="top-center" />
-        <AuthModal onSignIn={signIn} onSignUp={signUp} />
-      </>
-    )
-  }
-
   return (
-    <div className="w-screen h-screen overflow-hidden bg-space font-sans relative">
+    <div className="w-screen h-screen overflow-hidden font-sans relative" style={{ background: '#040810' }}>
       <Toaster
         position="top-center"
         toastOptions={{
@@ -41,15 +22,39 @@ export default function App() {
         }}
       />
 
-      <WorldMap
-        visitedCountries={travel.visitedCountries}
-        onCountryClick={setSelectedCountry}
-        userEmail={user.email}
-        onSignOut={signOut}
-      />
+      {/* Map always rendered — serves as background even during auth */}
+      <div className={user ? '' : 'pointer-events-none select-none'}>
+        <WorldMap
+          visitedCountries={travel.visitedCountries}
+          onCountryClick={setSelectedCountry}
+          userEmail={user?.email}
+          onSignOut={signOut}
+        />
+      </div>
 
+      {/* Auth overlay — shown when not logged in or still loading */}
       <AnimatePresence>
-        {selectedCountry && (
+        {(!user || authLoading) && (
+          authLoading ? (
+            <motion.div key="loading"
+              className="fixed inset-0 z-40 flex items-center justify-center"
+              style={{ background: '#040810' }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+            </motion.div>
+          ) : (
+            <motion.div key="auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <AuthModal onSignIn={signIn} onSignUp={signUp} />
+            </motion.div>
+          )
+        )}
+      </AnimatePresence>
+
+      {/* Country bottom sheet */}
+      <AnimatePresence>
+        {user && selectedCountry && (
           <CountrySheet
             key={selectedCountry.ISO_A3}
             country={selectedCountry}

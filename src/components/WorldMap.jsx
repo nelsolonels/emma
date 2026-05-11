@@ -157,7 +157,7 @@ export default function WorldMap({ visitedCountries, onCountryClick, userEmail, 
                       onMouseLeave={() => setTooltip(null)}
                       onClick={() => {
                         const c = geoCentroid(geo)
-                        onCountryClick({ ISO_A3: iso, name: nameFr, lat: c[1], lng: c[0] })
+                        onCountryClick({ ISO_A3: iso, name: nameFr, nameEn: geo.properties.ADMIN, lat: c[1], lng: c[0] })
                       }}
                       style={{
                         default: { fill: visited ? '#b45309' : '#2d4a7a', stroke: '#0d1f38', strokeWidth: 0.5, outline: 'none', cursor: 'pointer' },
