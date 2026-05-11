@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -32,7 +32,7 @@ function ClickHandler({ enabled, onPick }) {
 
 const TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
 
-export default function CountryView({ country, notes, isVisited, onBack, onAddNote, onDeleteNote, onToggleVisited, onAddZone }) {
+export default function CountryView({ country, notes, isVisited, onBack, onAddNote, onDeleteNote, onToggleVisited, onAddZone, zones = [], onRemoveZone }) {
   const [center, setCenter] = useState(
     country.lat != null ? [country.lat, country.lng] : [20, 0]
   )
@@ -145,6 +145,22 @@ export default function CountryView({ country, notes, isVisited, onBack, onAddNo
             <TileLayer url={TILE} attribution='&copy; CARTO' />
             <MapAutoCenter center={center} />
             <ClickHandler enabled={picking} onPick={handlePick} />
+            {zones.map(zone => (
+              <Circle key={zone.id}
+                center={[zone.lat, zone.lng]}
+                radius={zone.radiusKm * 1000}
+                pathOptions={{
+                  color: '#f59e0b',
+                  fillColor: '#f59e0b',
+                  fillOpacity: 0.15,
+                  weight: 2,
+                  dashArray: '8 5',
+                }}
+                eventHandlers={{
+                  click: () => { if (onRemoveZone && window.confirm(`Supprimer la zone "${zone.label}" ?`)) { onRemoveZone(zone.id); toast.success('Zone supprimée') } }
+                }}
+              />
+            ))}
             {notes.map(note => (
               <Marker key={note.id} position={[note.lat, note.lng]}
                 icon={markerIcon(selected?.id === note.id ? '#2dd4bf' : '#f59e0b')}

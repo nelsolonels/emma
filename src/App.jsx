@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
 import WorldMap from './components/WorldMap'
-import CountryView from './components/CountryView'
+import CountrySheet from './components/CountrySheet'
 import { useTravel } from './hooks/useTravel'
 
 export default function App() {
@@ -25,39 +25,27 @@ export default function App() {
         }}
       />
 
-      {/* WorldMap always mounted — never re-fetches GeoJSON */}
-      <div className="absolute inset-0">
-        <WorldMap
-          visitedCountries={travel.visitedCountries}
-          zones={travel.zones}
-          onCountryClick={setSelectedCountry}
-          onAddZone={travel.addZone}
-          onRemoveZone={travel.removeZone}
-        />
-      </div>
+      <WorldMap
+        visitedCountries={travel.visitedCountries}
+        zones={travel.zones}
+        onCountryClick={setSelectedCountry}
+        onAddZone={travel.addZone}
+        onRemoveZone={travel.removeZone}
+      />
 
-      {/* CountryView slides over the top */}
       <AnimatePresence>
         {selectedCountry && (
-          <motion.div
+          <CountrySheet
             key={selectedCountry.ISO_A3}
-            className="absolute inset-0 z-10"
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.3 }}
-          >
-            <CountryView
-              country={selectedCountry}
-              notes={travel.getNotes(selectedCountry.ISO_A3)}
-              isVisited={travel.isVisited(selectedCountry.ISO_A3)}
-              onBack={() => setSelectedCountry(null)}
-              onAddNote={(note) => travel.addNote(selectedCountry.ISO_A3, selectedCountry.name, note)}
-              onDeleteNote={(id) => travel.deleteNote(selectedCountry.ISO_A3, id)}
-              onToggleVisited={() => travel.toggleVisited(selectedCountry.ISO_A3, selectedCountry.name)}
-              onAddZone={travel.addZone}
-            />
-          </motion.div>
+            country={selectedCountry}
+            notes={travel.getNotes(selectedCountry.ISO_A3)}
+            isVisited={travel.isVisited(selectedCountry.ISO_A3)}
+            onClose={() => setSelectedCountry(null)}
+            onToggleVisited={() => travel.toggleVisited(selectedCountry.ISO_A3, selectedCountry.name)}
+            onAddNote={(note) => travel.addNote(selectedCountry.ISO_A3, selectedCountry.name, note)}
+            onDeleteNote={(id) => travel.deleteNote(selectedCountry.ISO_A3, id)}
+            onAddZone={travel.addZone}
+          />
         )}
       </AnimatePresence>
     </div>
