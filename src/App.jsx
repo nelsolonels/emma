@@ -22,8 +22,8 @@ export default function App() {
         }}
       />
 
-      {/* Map always rendered — serves as background even during auth */}
-      <div className={user ? '' : 'pointer-events-none select-none'}>
+      {/* Map — always fills screen, non-interactive during auth */}
+      <div className={`absolute inset-0 ${!user && hasSupabase ? 'pointer-events-none select-none' : ''}`}>
         <WorldMap
           visitedCountries={travel.visitedCountries}
           onCountryClick={setSelectedCountry}
@@ -32,12 +32,12 @@ export default function App() {
         />
       </div>
 
-      {/* Auth overlay — only when Supabase is configured and user not logged in */}
+      {/* Auth overlay */}
       <AnimatePresence>
         {hasSupabase && (!user || authLoading) && (
           authLoading ? (
             <motion.div key="loading"
-              className="fixed inset-0 z-40 flex items-center justify-center"
+              className="absolute inset-0 z-40 flex items-center justify-center"
               style={{ background: '#040810' }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
@@ -45,8 +45,14 @@ export default function App() {
               <div className="w-8 h-8 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
             </motion.div>
           ) : (
-            <motion.div key="auth" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <AuthModal onSignIn={signIn} onSignUp={signUp} />
+            <motion.div key="auth"
+              className="absolute inset-0 z-40 pointer-events-none"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            >
+              {/* Re-enable pointer events only on the modal card itself */}
+              <div className="pointer-events-auto w-full h-full">
+                <AuthModal onSignIn={signIn} onSignUp={signUp} />
+              </div>
             </motion.div>
           )
         )}
