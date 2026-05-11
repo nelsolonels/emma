@@ -1,26 +1,18 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
-import { X, Check, Camera, Paintbrush, Star, Trash2, Calendar, Tag, MapPin } from 'lucide-react'
+import { X, Check, Camera, Star, Trash2, Calendar, MapPin } from 'lucide-react'
 import NoteModal from './NoteModal'
-import RadiusModal from './RadiusModal'
 import toast from 'react-hot-toast'
 
-export default function CountrySheet({ country, isVisited, notes, onClose, onToggleVisited, onAddNote, onDeleteNote, onAddZone }) {
+export default function CountrySheet({ country, isVisited, notes, onClose, onToggleVisited, onAddNote, onDeleteNote }) {
   const [showNoteModal, setShowNoteModal] = useState(false)
-  const [showZoneModal, setShowZoneModal] = useState(false)
   const [selected, setSelected] = useState(null)
 
   const handleSaveNote = (note) => {
     onAddNote(note)
     setShowNoteModal(false)
     toast.success('Souvenir sauvegardé ✨')
-  }
-
-  const handleSaveZone = (zone) => {
-    onAddZone(zone)
-    setShowZoneModal(false)
-    toast.success(`Zone "${zone.label}" colorée !`)
   }
 
   const handleDelete = (noteId) => {
@@ -83,23 +75,15 @@ export default function CountrySheet({ country, isVisited, notes, onClose, onTog
           </button>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 px-5 pb-4 flex-shrink-0">
+        {/* Add note button */}
+        <div className="px-5 pb-4 flex-shrink-0">
           <button
             onClick={() => setShowNoteModal(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
             style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.25)', color: '#2dd4bf' }}
           >
             <Camera className="w-4 h-4" />
-            Souvenir
-          </button>
-          <button
-            onClick={() => setShowZoneModal(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-95"
-            style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#f59e0b' }}
-          >
-            <Paintbrush className="w-4 h-4" />
-            Colorier ville
+            Ajouter un souvenir
           </button>
         </div>
 
@@ -135,19 +119,6 @@ export default function CountrySheet({ country, isVisited, notes, onClose, onTog
               initialCity={country.name}
               onSave={handleSaveNote}
               onClose={() => setShowNoteModal(false)}
-            />
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
-
-      {/* Zone Modal */}
-      {createPortal(
-        <AnimatePresence>
-          {showZoneModal && (
-            <RadiusModal
-              onSave={handleSaveZone}
-              onClose={() => setShowZoneModal(false)}
             />
           )}
         </AnimatePresence>,

@@ -27,10 +27,7 @@ export default function App() {
 
       <WorldMap
         visitedCountries={travel.visitedCountries}
-        zones={travel.zones}
         onCountryClick={setSelectedCountry}
-        onAddZone={travel.addZone}
-        onRemoveZone={travel.removeZone}
       />
 
       <AnimatePresence>
@@ -44,7 +41,6 @@ export default function App() {
             onToggleVisited={() => travel.toggleVisited(selectedCountry.ISO_A3, selectedCountry.name)}
             onAddNote={(note) => travel.addNote(selectedCountry.ISO_A3, selectedCountry.name, note)}
             onDeleteNote={(id) => travel.deleteNote(selectedCountry.ISO_A3, id)}
-            onAddZone={travel.addZone}
           />
         )}
       </AnimatePresence>
