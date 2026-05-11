@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #050b14;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────── */
+.custom-scroll::-webkit-scrollbar { width: 4px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #1a2d4a;
+  border-radius: 100px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: #243555; }
+
+/* ─── Sidebar panel ──────────────────────────────────── */
+.sidebar-panel {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  background: rgba(10, 22, 40, 0.85);
+  backdrop-filter: blur(24px);
+  border-right: 1px solid #1a2d4a;
+  z-index: 10;
+  overflow: hidden;
+}
+
+/* ─── Map button ─────────────────────────────────────── */
+.map-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(10, 22, 40, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid #1a2d4a;
+  color: #94a3b8;
+  font-size: 18px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  z-index: 10;
+  position: relative;
+}
+.map-btn:hover {
+  background: rgba(26, 45, 74, 0.9);
+  color: #f1f5f9;
+  border-color: #243555;
+}
+
+/* ─── Form inputs ────────────────────────────────────── */
+.form-input {
+  width: 100%;
+  background: #0a1628;
+  border: 1px solid #1a2d4a;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #e2e8f0;
+  transition: border-color 0.15s;
+  outline: none;
+  font-family: inherit;
+}
+.form-input:focus { border-color: rgba(45, 212, 191, 0.5); }
+.form-input::placeholder { color: #475569; }
+.form-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.4);
+  cursor: pointer;
+}
+.form-textarea {
+  width: 100%;
+  background: #0a1628;
+  border: 1px solid #1a2d4a;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #e2e8f0;
+  transition: border-color 0.15s;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+}
+.form-textarea:focus { border-color: rgba(45, 212, 191, 0.5); }
+.form-textarea::placeholder { color: #475569; }
+
+/* ─── Leaflet overrides ──────────────────────────────── */
+.leaflet-container {
+  background: #050b14 !important;
+}
+.leaflet-control-zoom {
+  display: none;
+}
+.leaflet-pane,
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane,
+.leaflet-tile-pane {
+  z-index: auto !important;
+}
+.leaflet-top, .leaflet-bottom {
+  z-index: 800 !important;
+}
+
+/* ─── Custom Leaflet Marker ──────────────────────────── */
+.lf-marker {
+  position: relative;
+  width: 28px;
+  height: 36px;
+  --mc: #f59e0b;
+}
+.lf-pin {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--mc);
+  transform: translateX(-50%) rotate(-45deg);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 0 3px rgba(245,158,11,0.2);
+  transition: transform 0.15s;
+}
+.lf-marker:hover .lf-pin {
+  transform: translateX(-50%) rotate(-45deg) scale(1.15);
+}
+.lf-photo-dot {
+  position: absolute;
+  left: 50%;
+  top: 5px;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ─── ComposableMap ocean background ─────────────────── */
+.rsm-svg {
+  background: transparent;
+}
+
+/* ─── Animations ─────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.5); }
+}
+
+/* ─── Utility ────────────────────────────────────────── */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
